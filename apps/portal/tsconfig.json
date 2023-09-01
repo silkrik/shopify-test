@@ -1,0 +1,12 @@
+{
+  "exclude": ["node_modules"],
+  "extends": "@d5/tsconfig/vite.json",
+  "compilerOptions": {
+    "types": ["cypress"],
+    "outDir": "dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "cypress.d.ts", "../../packages/ui/src/D5Pagination", "../../packages/ui/src/D5Tags"]
+}

@@ -1,0 +1,30 @@
+# docker-compose.yml
+
+version: "3"
+services:
+  nest_postgres:
+    image: postgres:13.5
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - TZ=Asia/Shanghai
+    volumes:
+      - 'postgres_data:/var/lib/postgresql/data/pgdata'
+
+  redis:
+    restart: always
+    image: redis:alpine
+
+  nest_api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file: ./apps/api/.env
+    restart: always
+    ports:
+      - 3001:3000
+
+volumes:
+  postgres_data:

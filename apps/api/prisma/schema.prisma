@@ -1,0 +1,695 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model account_logs {
+  id         BigInt   @id @default(autoincrement())
+  message    Json
+  log_time   Int
+  ip_address String   @db.VarChar(45)
+  function   String   @db.VarChar(45)
+  account_id BigInt
+  store_id   BigInt
+  accounts   accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "account_logs_account_id_6c231da4_fk_accounts_id")
+  stores     stores   @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "account_logs_store_id_456a4536_fk_stores_id")
+
+  @@index([account_id], map: "account_logs_account_id_6c231da4")
+  @@index([store_id], map: "account_logs_store_id_456a4536")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model accounts {
+  id                 BigInt          @id @default(autoincrement())
+  created_at         Int
+  updated_at         Int
+  format_created_at  DateTime        @db.Timestamptz(6)
+  format_updated_at  DateTime        @db.Timestamptz(6)
+  first_name         String          @db.VarChar(45)
+  last_name          String          @db.VarChar(45)
+  email              String          @unique(map: "accounts_email_200aa879_uniq") @db.VarChar(100)
+  phone              String?         @db.VarChar(45)
+  company            String          @db.VarChar(45)
+  revenue_id         Int             @db.SmallInt
+  status             Int             @db.SmallInt
+  bc_account_id      String          @unique @db.VarChar(45)
+  state              String          @db.VarChar(45)
+  country            String          @db.VarChar(45)
+  city               String          @db.VarChar(45)
+  address_line1      String?
+  address_line2      String?
+  zip                String?         @db.VarChar(45)
+  billing_contact_id BigInt
+  tenant_id          BigInt
+  has_store          Boolean
+  account_logs       account_logs[]
+  billing_contact    billing_contact @relation(fields: [billing_contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "accounts_billing_contact_id_2bc4832b_fk_billing_contact_id")
+  tenants            tenants         @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "accounts_tenant_id_92aa2d6f_fk_tenants_id")
+  promotions         promotions[]
+  stores             stores[]
+
+  @@index([bc_account_id], map: "accounts_bc_account_id_92eb9a2c_like")
+  @@index([billing_contact_id], map: "accounts_billing_contact_id_2bc4832b")
+  @@index([email], map: "accounts_email_200aa879_like")
+  @@index([tenant_id], map: "accounts_tenant_id_92aa2d6f")
+}
+
+model billing_contact {
+  id                BigInt     @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime   @db.Timestamptz(6)
+  format_updated_at DateTime   @db.Timestamptz(6)
+  first_name        String     @db.VarChar(45)
+  last_name         String     @db.VarChar(45)
+  email             String     @db.VarChar(45)
+  company           String     @db.VarChar(45)
+  state             String     @db.VarChar(45)
+  country           String     @db.VarChar(45)
+  city              String     @db.VarChar(45)
+  phone             String?    @db.VarChar(45)
+  address_line1     String?
+  address_line2     String?
+  zip               String?    @db.VarChar(45)
+  accounts          accounts[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model categories {
+  id                               BigInt                             @id(map: "product_category_pkey") @default(autoincrement())
+  name                             String                             @db.VarChar(100)
+  tenant_id                        BigInt
+  is_visible                       Boolean
+  products_qty                     Int
+  parent_id                        Int
+  bc_id                            Int
+  tenants                          tenants                            @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_category_tenant_id_137164b9_fk_tenants_id")
+  product_categories               product_categories[]
+  provisioning_profiles_categories provisioning_profiles_categories[]
+
+  @@index([tenant_id], map: "product_category_tenant_id_137164b9")
+}
+
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model group {
+  id               BigInt             @id @default(autoincrement())
+  name             String             @db.VarChar(255)
+  description      String
+  status           Boolean
+  enable_account   Int
+  disable_account  Int
+  tenant_id        BigInt
+  tenants          tenants            @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_tenant_id_de1dfc19_fk_tenants_id")
+  group_permission group_permission[]
+  user_group       user_group[]
+
+  @@index([tenant_id], map: "group_tenant_id_de1dfc19")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model group_permission {
+  id            BigInt     @id @default(autoincrement())
+  group_id      BigInt
+  permission_id BigInt
+  group         group      @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_permission_group_id_9ad985d1_fk_group_id")
+  permission    permission @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_permission_permission_id_1617f503_fk_permission_id")
+
+  @@index([group_id], map: "group_permission_group_id_9ad985d1")
+  @@index([permission_id], map: "group_permission_permission_id_1617f503")
+}
+
+model permission {
+  id               BigInt             @id @default(autoincrement())
+  name             String             @unique @db.VarChar(255)
+  description      String
+  module           String             @db.VarChar(255)
+  group_permission group_permission[]
+
+  @@index([name], map: "permission_name_123d2039_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plan_payments {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  plan_payment_no   String   @unique @db.VarChar(45)
+  store_hash        String   @db.VarChar(45)
+  store_id          Int
+  bc_store_id       String   @db.VarChar(45)
+  store_name        String   @db.VarChar(128)
+  account_id        Int
+  bc_account_id     String   @db.VarChar(45)
+  plan_id           Int
+  plan_sku          String   @db.VarChar(45)
+  plan_name         String   @db.VarChar(128)
+  plan_code         String   @db.VarChar(45)
+  plan_price        Decimal  @db.Decimal(10, 2)
+  amount            Decimal  @db.Decimal(10, 2)
+  net               Decimal  @db.Decimal(10, 2)
+  gross             Decimal  @db.Decimal(10, 2)
+  tenant_id         BigInt
+  tenants           tenants  @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plan_payments_tenant_id_5539180b_fk_tenants_id")
+
+  @@index([plan_payment_no], map: "plan_payments_plan_payment_no_0ba7fa5f_like")
+  @@index([tenant_id], map: "plan_payments_tenant_id_5539180b")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model plans {
+  id                                                       BigInt               @id @default(autoincrement())
+  name                                                     String               @db.VarChar(45)
+  code                                                     String               @db.VarChar(45)
+  sku                                                      String               @db.VarChar(45)
+  desc                                                     String?
+  cost                                                     Decimal              @db.Decimal(10, 2)
+  price                                                    Decimal              @db.Decimal(10, 2)
+  is_trial                                                 Boolean
+  is_active                                                Boolean
+  is_delete                                                Boolean
+  bill_cycle                                               Int
+  tenant_id                                                BigInt
+  franchise_price                                          Decimal              @db.Decimal(10, 2)
+  is_effective                                             Boolean
+  tenants                                                  tenants              @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "plans_tenant_id_69bf2e77_fk_tenants_id")
+  store_plan_changes_store_plan_changes_cur_plan_idToplans store_plan_changes[] @relation("store_plan_changes_cur_plan_idToplans")
+  store_plan_changes_store_plan_changes_pre_plan_idToplans store_plan_changes[] @relation("store_plan_changes_pre_plan_idToplans")
+  stores                                                   stores[]
+
+  @@index([tenant_id], map: "plans_tenant_id_69bf2e77")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model product {
+  id                             BigInt                           @id @default(autoincrement())
+  created_at                     Int
+  updated_at                     Int
+  format_created_at              DateTime                         @db.Timestamptz(6)
+  format_updated_at              DateTime                         @db.Timestamptz(6)
+  name                           String                           @db.VarChar(255)
+  type                           Int                              @db.SmallInt
+  sku                            String                           @db.VarChar(255)
+  inventory_track                Int                              @db.SmallInt
+  inventory                      Int
+  low_stork                      Int
+  price                          Decimal                          @db.Decimal(8, 2)
+  cost_price                     Decimal?                         @db.Decimal(8, 2)
+  retail_price                   Decimal?                         @db.Decimal(8, 2)
+  sale_price                     Decimal?                         @db.Decimal(8, 2)
+  description                    String?
+  custom_fields                  Json
+  page_title                     String?                          @db.VarChar(255)
+  product_url                    String                           @db.VarChar(255)
+  meta_description               String?
+  search_keywords                String?                          @db.VarChar(255)
+  meta_keywords                  String?                          @db.VarChar(255)
+  bin_picking                    String?                          @db.VarChar(255)
+  bar_code                       String?                          @db.VarChar(32)
+  global_trade                   String?                          @db.VarChar(255)
+  manufacturer_part              String?                          @db.VarChar(255)
+  free                           Boolean
+  fixed                          Decimal?                         @db.Decimal(8, 2)
+  weight                         Decimal                          @db.Decimal(8, 2)
+  width                          Decimal?                         @db.Decimal(8, 2)
+  height                         Decimal?                         @db.Decimal(8, 2)
+  depth                          Decimal?                         @db.Decimal(8, 2)
+  is_visible                     Boolean
+  is_featured                    Boolean
+  warranty                       String?
+  tax_class                      Int                              @db.SmallInt
+  condition                      Int                              @db.SmallInt
+  is_show_condition              Boolean
+  sort_order                     Int
+  brand                          String?                          @db.VarChar(128)
+  tenant_id                      BigInt
+  tenants                        tenants                          @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_tenant_id_957f8279_fk_tenants_id")
+  product_categories             product_categories[]
+  product_images                 product_images[]
+  product_variant                product_variant[]
+  provisioning_profiles_products provisioning_profiles_products[]
+
+  @@index([tenant_id], map: "product_tenant_id_957f8279")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model product_categories {
+  id          BigInt     @id @default(autoincrement())
+  product_id  BigInt
+  category_id BigInt
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_categories_category_id_127e9bb3_fk_product_category_id")
+  product     product    @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_categories_product_id_8862397f_fk_product_id")
+
+  @@unique([product_id, category_id], map: "product_categories_product_id_category_id_7f37747d_uniq")
+  @@index([category_id], map: "product_categories_category_id_127e9bb3")
+  @@index([product_id], map: "product_categories_product_id_8862397f")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model product_images {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  image             String   @db.VarChar(255)
+  image_import      String?  @db.VarChar(255)
+  is_thumbnail      Boolean
+  image_sort_order  Int
+  image_description String?
+  youtube           String?  @db.VarChar(100)
+  video_title       String?  @db.VarChar(500)
+  video_description String?
+  video_sort_order  Int?
+  product_id        BigInt
+  product           product  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_images_product_id_28ebf5f0_fk_product_id")
+
+  @@index([product_id], map: "product_images_product_id_28ebf5f0")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model product_variant {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  sku               String   @db.VarChar(255)
+  option            Json
+  current_stork     Int
+  low_stork         Int
+  cost_price        Decimal? @db.Decimal(8, 2)
+  bin_picking       String?  @db.VarChar(255)
+  free              Boolean
+  product_id        BigInt
+  bar_code          String?  @db.VarChar(255)
+  depth             Decimal? @db.Decimal(8, 2)
+  fixed             Decimal? @db.Decimal(8, 2)
+  global_trade      String?  @db.VarChar(255)
+  height            Decimal? @db.Decimal(8, 2)
+  image_url         String?  @db.VarChar(200)
+  manufacturer_part String?  @db.VarChar(255)
+  price             Decimal  @db.Decimal(8, 2)
+  retail_price      Decimal? @db.Decimal(8, 2)
+  sale_price        Decimal? @db.Decimal(8, 2)
+  weight            Decimal? @db.Decimal(8, 2)
+  width             Decimal? @db.Decimal(8, 2)
+  product           product  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_variant_product_id_31eca93d_fk_product_id")
+
+  @@index([product_id], map: "product_variant_product_id_31eca93d")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model promotions {
+  id                                                        BigInt                            @id @default(autoincrement())
+  created_at                                                Int
+  updated_at                                                Int
+  format_created_at                                         DateTime                          @db.Timestamptz(6)
+  format_updated_at                                         DateTime                          @db.Timestamptz(6)
+  promotion_id                                              String                            @unique @db.VarChar(45)
+  name                                                      String                            @db.VarChar(128)
+  redemption_type                                           Int                               @db.SmallInt
+  status                                                    Int                               @db.SmallInt
+  max_uses                                                  Int?                              @db.SmallInt
+  current_uses                                              Int?                              @db.SmallInt
+  stop                                                      Boolean
+  can_be_used_with_other_promotions                         Boolean
+  start_date                                                Int?
+  end_date                                                  Int?
+  customer                                                  Json
+  rules                                                     Json
+  notifications                                             Json
+  shipping_address                                          Json?
+  schedule                                                  Json?
+  currency_code                                             String                            @db.VarChar(32)
+  coupon_overrides_automatic_when_offering_higher_discounts Boolean
+  account_id                                                BigInt
+  tenant_id                                                 BigInt
+  coupon_code                                               String?                           @db.VarChar(200)
+  accounts                                                  accounts                          @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "promotions_account_id_4712cfc3_fk_accounts_id")
+  tenants                                                   tenants                           @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "promotions_tenant_id_50305f0d_fk_tenants_id")
+  provisioning_profiles_promotion                           provisioning_profiles_promotion[]
+
+  @@index([account_id], map: "promotions_account_id_4712cfc3")
+  @@index([promotion_id], map: "promotions_promotion_id_56239b44_like")
+  @@index([tenant_id], map: "promotions_tenant_id_50305f0d")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provisioning_profiles {
+  id                               BigInt                             @id @default(autoincrement())
+  created_at                       Int
+  updated_at                       Int
+  format_created_at                DateTime                           @db.Timestamptz(6)
+  format_updated_at                DateTime                           @db.Timestamptz(6)
+  name                             String                             @db.VarChar(255)
+  utilization                      Int
+  themes_id                        BigInt?
+  img                              String?                            @db.VarChar(255)
+  industry                         String?                            @db.VarChar(255)
+  description                      String?
+  orders                           Int?
+  sale                             Decimal?                           @db.Decimal(8, 2)
+  is_deleted                       Boolean
+  tenant_id                        BigInt
+  products_qty                     Int
+  template_id                      Int?
+  tenants                          tenants                            @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profiles_tenant_id_efbf562a_fk_tenants_id")
+  themes                           themes?                            @relation(fields: [themes_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profiles_themes_id_b4ce7571_fk_themes_id")
+  provisioning_profiles_categories provisioning_profiles_categories[]
+  provisioning_profiles_products   provisioning_profiles_products[]
+  provisioning_profiles_promotion  provisioning_profiles_promotion[]
+  stores                           stores[]
+
+  @@index([tenant_id], map: "provisioning_profiles_tenant_id_efbf562a")
+  @@index([themes_id], map: "provisioning_profiles_themes_id_b4ce7571")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provisioning_profiles_categories {
+  id                      BigInt                @id @default(autoincrement())
+  provisioningprofiles_id BigInt
+  category_id             BigInt
+  categories              categories            @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_category_id_d13fe474_fk_categorie")
+  provisioning_profiles   provisioning_profiles @relation(fields: [provisioningprofiles_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_provisioningprofiles_a11e1618_fk_provision")
+
+  @@unique([provisioningprofiles_id, category_id], map: "provisioning_profiles_ca_provisioningprofiles_id__68a2d65a_uniq")
+  @@index([provisioningprofiles_id], map: "provisioning_profiles_cate_provisioningprofiles_id_a11e1618")
+  @@index([category_id], map: "provisioning_profiles_categories_category_id_d13fe474")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provisioning_profiles_products {
+  id                      BigInt                @id @default(autoincrement())
+  provisioningprofiles_id BigInt
+  product_id              BigInt
+  product                 product               @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_product_id_0248d606_fk_product_i")
+  provisioning_profiles   provisioning_profiles @relation(fields: [provisioningprofiles_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_provisioningprofiles_19fe536f_fk_provision")
+
+  @@unique([provisioningprofiles_id, product_id], map: "provisioning_profiles_pr_provisioningprofiles_id__78b1f69d_uniq")
+  @@index([product_id], map: "provisioning_profiles_products_product_id_0248d606")
+  @@index([provisioningprofiles_id], map: "provisioning_profiles_products_provisioningprofiles_id_19fe536f")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model provisioning_profiles_promotion {
+  id                      BigInt                @id @default(autoincrement())
+  provisioningprofiles_id BigInt
+  promotion_id            BigInt
+  promotions              promotions            @relation(fields: [promotion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_promotion_id_8f6f4d3c_fk_promotion")
+  provisioning_profiles   provisioning_profiles @relation(fields: [provisioningprofiles_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provisioning_profile_provisioningprofiles_60f775d5_fk_provision")
+
+  @@unique([provisioningprofiles_id, promotion_id], map: "provisioning_profiles_pr_provisioningprofiles_id__d88130bd_uniq")
+  @@index([provisioningprofiles_id], map: "provisioning_profiles_prom_provisioningprofiles_id_60f775d5")
+  @@index([promotion_id], map: "provisioning_profiles_promotion_promotion_id_8f6f4d3c")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model store_apps {
+  id                BigInt      @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime    @db.Timestamptz(6)
+  format_updated_at DateTime    @db.Timestamptz(6)
+  key               String      @db.VarChar(128)
+  token             String      @db.VarChar(500)
+  bc_user_id        Int
+  app_id            BigInt
+  store_id          BigInt
+  tenant_apps       tenant_apps @relation(fields: [app_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_apps_app_id_1744dd79_fk_tenant_apps_id")
+  stores            stores      @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_apps_store_id_92861862_fk_stores_id")
+
+  @@unique([store_id, app_id], map: "store_apps_store_id_app_id_80ec8519_uniq")
+  @@index([app_id], map: "store_apps_app_id_1744dd79")
+  @@index([store_id], map: "store_apps_store_id_92861862")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model store_logs {
+  id         BigInt  @id @default(autoincrement())
+  bc_log_id  Int
+  severity   Int     @db.SmallInt
+  type       String  @db.VarChar(40)
+  module     String? @db.VarChar(255)
+  summary    String? @db.VarChar(255)
+  message    String?
+  created_at Int
+  store_id   BigInt
+  tenant_id  BigInt
+  stores     stores  @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_logs_store_id_91ee0669_fk_stores_id")
+  tenants    tenants @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_logs_tenant_id_a7f195fd_fk_tenants_id")
+
+  @@unique([store_id, bc_log_id], map: "store_logs_store_id_bc_log_id_a8aabf69_uniq")
+  @@index([store_id], map: "store_logs_store_id_91ee0669")
+  @@index([tenant_id], map: "store_logs_tenant_id_a7f195fd")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model store_plan_changes {
+  id                                          BigInt       @id @default(autoincrement())
+  created_at                                  Int
+  updated_at                                  Int
+  format_created_at                           DateTime     @db.Timestamptz(6)
+  format_updated_at                           DateTime     @db.Timestamptz(6)
+  effective                                   Int          @db.SmallInt
+  effective_date                              Int
+  amount                                      Decimal      @db.Decimal(10, 2)
+  status                                      Int          @db.SmallInt
+  cur_plan_id                                 BigInt
+  pre_plan_id                                 BigInt
+  store_id                                    BigInt
+  user_id                                     BigInt
+  plans_store_plan_changes_cur_plan_idToplans plans        @relation("store_plan_changes_cur_plan_idToplans", fields: [cur_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_plan_changes_cur_plan_id_0a880359_fk_plans_id")
+  plans_store_plan_changes_pre_plan_idToplans plans        @relation("store_plan_changes_pre_plan_idToplans", fields: [pre_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_plan_changes_pre_plan_id_a6c9f03f_fk_plans_id")
+  stores                                      stores       @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_plan_changes_store_id_bfaebddd_fk_stores_id")
+  tenant_users                                tenant_users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "store_plan_changes_user_id_f7f38954_fk_tenant_users_id")
+
+  @@index([cur_plan_id], map: "store_plan_changes_cur_plan_id_0a880359")
+  @@index([pre_plan_id], map: "store_plan_changes_pre_plan_id_a6c9f03f")
+  @@index([store_id], map: "store_plan_changes_store_id_bfaebddd")
+  @@index([user_id], map: "store_plan_changes_user_id_f7f38954")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model stores {
+  id                      BigInt                 @id @default(autoincrement())
+  created_at              Int
+  updated_at              Int
+  format_created_at       DateTime               @db.Timestamptz(6)
+  format_updated_at       DateTime               @db.Timestamptz(6)
+  store_id                String                 @unique @db.VarChar(45)
+  name                    String                 @db.VarChar(128)
+  desc                    String?
+  store_hash              String?                @db.VarChar(45)
+  country                 String                 @db.VarChar(10)
+  region                  Int                    @db.SmallInt
+  is_trial                Boolean
+  status                  Int                    @db.SmallInt
+  expire_time             Int?
+  allocated_at            Int?
+  is_launched             Boolean
+  is_paused               Boolean
+  is_destroyed            Boolean
+  primary_hostname        String?                @db.VarChar(255)
+  canonical_hostname      String?                @db.VarChar(255)
+  api_info                Json
+  settings                Json
+  account_id              BigInt
+  plan_id                 BigInt
+  tenant_id               BigInt
+  company                 String?                @db.VarChar(128)
+  provisioning_profile_id BigInt?
+  account_logs            account_logs[]
+  store_apps              store_apps[]
+  store_logs              store_logs[]
+  store_plan_changes      store_plan_changes[]
+  accounts                accounts               @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stores_account_id_13ed3d59_fk_accounts_id")
+  plans                   plans                  @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stores_plan_id_280e6763_fk_plans_id")
+  provisioning_profiles   provisioning_profiles? @relation(fields: [provisioning_profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stores_provisioning_profile_fdf2560e_fk_provision")
+  tenants                 tenants                @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "stores_tenant_id_34c19dfe_fk_tenants_id")
+
+  @@unique([name, account_id], map: "stores_name_account_id_f2d22d62_uniq")
+  @@index([account_id], map: "stores_account_id_13ed3d59")
+  @@index([plan_id], map: "stores_plan_id_280e6763")
+  @@index([provisioning_profile_id], map: "stores_provisioning_profile_id_fdf2560e")
+  @@index([store_id], map: "stores_store_id_119c32aa_like")
+  @@index([tenant_id], map: "stores_tenant_id_34c19dfe")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model sys_config {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  key               Int      @db.SmallInt
+  value             Json
+  tenant_id         BigInt
+  tenants           tenants  @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sys_config_tenant_id_5a59e05c_fk_tenants_id")
+
+  @@index([tenant_id], map: "sys_config_tenant_id_5a59e05c")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model tenant_apps {
+  id                BigInt       @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime     @db.Timestamptz(6)
+  format_updated_at DateTime     @db.Timestamptz(6)
+  key               String       @db.VarChar(128)
+  name              String       @db.VarChar(150)
+  app_id            Int          @unique
+  client_id         String       @db.VarChar(128)
+  client_secret     String       @db.VarChar(500)
+  default_app_url   String       @db.VarChar(255)
+  auth_url          String       @db.VarChar(255)
+  tenant_id         BigInt
+  store_apps        store_apps[]
+  tenants           tenants      @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tenant_apps_tenant_id_17392124_fk_tenants_id")
+
+  @@index([tenant_id], map: "tenant_apps_tenant_id_17392124")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model tenant_logs {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  user              String   @db.VarChar(254)
+  ip_address        String   @db.VarChar(45)
+  module            String   @db.VarChar(45)
+  details           String   @db.VarChar(45)
+  tenant_id         BigInt
+  tenants           tenants  @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tenant_logs_tenant_id_6ccc811e_fk_tenants_id")
+
+  @@index([tenant_id], map: "tenant_logs_tenant_id_6ccc811e")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model tenant_users {
+  id                 BigInt               @id @default(autoincrement())
+  created_at         Int?
+  updated_at         Int?
+  format_created_at  DateTime?             @db.Timestamptz(6)
+  format_updated_at  DateTime?            @db.Timestamptz(6)
+  first_name         String               @db.VarChar(150)
+  last_name          String               @db.VarChar(150)
+  email              String               @unique @db.VarChar(254)
+  password           String               @db.VarChar(150)
+  is_active          Boolean
+  last_login         Int?
+  phone              String?              @db.VarChar(20)
+  is_deleted         Boolean?
+  tenant_id          BigInt?
+  store_plan_changes store_plan_changes[]
+  tenants            tenants?              @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tenant_users_tenant_id_52a75c9d_fk_tenants_id")
+  user_group         user_group[]
+
+  @@index([email], map: "tenant_users_email_95d4bf98_like")
+  @@index([tenant_id], map: "tenant_users_tenant_id_52a75c9d")
+  @@map("tenant_users")
+}
+
+model tenants {
+  id                    BigInt                  @id @default(autoincrement())
+  created_at            Int?
+  updated_at            Int?
+  format_created_at     DateTime?               @db.Timestamptz(6)
+  format_updated_at     DateTime?               @db.Timestamptz(6)
+  key                   String                  @unique @db.VarChar(128)
+  name                  String                  @db.VarChar(150)
+  email                 String                  @db.VarChar(254)
+  phone                 String?                 @db.VarChar(20)
+  country               String?                  @db.VarChar(50)
+  state                 String?                  @db.VarChar(50)
+  city                  String?                 @db.VarChar(50)
+  address               String                  @db.VarChar(500)
+  contact_info          Json?
+  status                Boolean
+  franchise_id          String?                 @db.VarChar(128)
+  client_id             String?                 @db.VarChar(128)
+  client_secret         String?                 @db.VarChar(500)
+  token                 String?                 @db.VarChar(255)
+  expires_at            Int?
+  region                Int?                  @db.SmallInt
+  accounts              accounts[]
+  categories            categories[]
+  group                 group[]
+  plan_payments         plan_payments[]
+  plans                 plans[]
+  product               product[]
+  promotions            promotions[]
+  provisioning_profiles provisioning_profiles[]
+  store_logs            store_logs[]
+  stores                stores[]
+  sys_config            sys_config[]
+  tenant_apps           tenant_apps[]
+  tenant_logs           tenant_logs[]
+  tenant_users          tenant_users[]
+  themes                themes[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model themes {
+  id                    BigInt                  @id @default(autoincrement())
+  created_at            Int
+  updated_at            Int
+  format_created_at     DateTime                @db.Timestamptz(6)
+  format_updated_at     DateTime                @db.Timestamptz(6)
+  name                  String                  @db.VarChar(200)
+  uuid                  String                  @unique @db.VarChar(200)
+  is_private            Boolean
+  is_active             Boolean
+  utilization           Int
+  image                 String                  @db.VarChar(200)
+  tenant_id             BigInt
+  provisioning_profiles provisioning_profiles[]
+  tenants               tenants                 @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "themes_tenant_id_d45a14f8_fk_tenants_id")
+  themes_variation      themes_variation[]
+
+  @@index([tenant_id], map: "themes_tenant_id_d45a14f8")
+  @@index([uuid], map: "themes_uuid_099235bf_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model themes_variation {
+  id                BigInt   @id @default(autoincrement())
+  created_at        Int
+  updated_at        Int
+  format_created_at DateTime @db.Timestamptz(6)
+  format_updated_at DateTime @db.Timestamptz(6)
+  uuid              String   @unique @db.VarChar(200)
+  name              String   @db.VarChar(200)
+  description       String?
+  external_id       String   @db.VarChar(100)
+  image             String   @db.VarChar(200)
+  themes_id         BigInt
+  themes            themes   @relation(fields: [themes_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "themes_variation_themes_id_b953bc38_fk_themes_id")
+
+  @@index([themes_id], map: "themes_variation_themes_id_b953bc38")
+  @@index([uuid], map: "themes_variation_uuid_5edd6777_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model user_group {
+  id            BigInt       @id @default(autoincrement())
+  status        Boolean
+  group_id      BigInt
+  tenantUser_id BigInt
+  group         group        @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_group_group_id_ce41bceb_fk_group_id")
+  tenant_users  tenant_users @relation(fields: [tenantUser_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_group_tenantUser_id_dac62c1d_fk_tenant_users_id")
+
+  @@index([group_id], map: "user_group_group_id_ce41bceb")
+  @@index([tenantUser_id], map: "user_group_tenantUser_id_dac62c1d")
+}

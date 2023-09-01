@@ -1,0 +1,99 @@
+name: Deploy Dev
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - demo
+jobs:
+  dev:
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Build
+        run: |
+          echo "VITE_API_BASE_URL = https://d5dev.mez100.com.cn/api/v1" > apps/portal/.env.dev.local
+          yarn
+          yarn prepare
+          yarn build:dev
+
+      - name: Deploy
+        run: |
+          aws s3 cp dist/pby s3://d5-cdn-files --recursive
+          aws cloudfront create-invalidation --distribution-id E1UC3FB99QJ8IH --path "/*"
+
+  staging:
+    if: github.ref_name == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Build
+        run: |
+          echo "VITE_API_BASE_URL = https://d5staging.mez100.com.cn/api/v1" > apps/portal/.env.staging.local
+          yarn
+          yarn prepare
+          yarn build:staging
+
+      - name: Deploy
+        run: |
+          aws s3 cp dist/pby s3://d5-staging-cdn-files --recursive
+          aws cloudfront create-invalidation --distribution-id E25OCQQ5WIXS80 --path "/*"
+  demo:
+    if: github.ref_name == 'demo'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Build
+        run: |
+          echo "VITE_API_BASE_URL = https://d5demo.silkdigital.io/api/v1" > apps/portal/.env.staging.local
+          yarn
+          yarn prepare
+          yarn build:staging
+
+      - name: Deploy
+        run: |
+          aws s3 cp dist/pby s3://d5-demo-cdn-files --recursive
+          aws cloudfront create-invalidation --distribution-id E2ARC2G3JM3TAP --path "/*"

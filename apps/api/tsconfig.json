@@ -1,0 +1,14 @@
+{
+  "extends": "@d5/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "strictPropertyInitialization": false,
+    "target": "es6",
+    "skipLibCheck": true,
+  },
+  "include": ["src", "test", "prisma"],
+}
